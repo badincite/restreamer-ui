@@ -6,10 +6,12 @@ var config = {
 	liveui: true,
 	responsive: true,
 	fluid: true,
-	// Needed to append the url orgin in order for the source to properly pass to the cast device
-	sources: [{ src: playerConfig.source, type: 'application/x-mpegURL' }],
+	sources: [{ src: window.location.origin + '/' + playerConfig.source, type: 'application/x-mpegURL' }],
 	plugins: {
 		license: playerConfig.license,
+		chromecast: {
+			receiverApplicationId: 'CC1AD845'
+		},
 	},
 };
 
