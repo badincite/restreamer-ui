@@ -199,6 +199,12 @@ const createInputs = (settings, config, skills) => {
 			if (name === config.channelid) {
 				name += '.stream';
 			}
+			// RTMP discovery returns full paths (e.g. /live/browser.stream),
+			// but the core adds the configured app when expanding {rtmp,name=}.
+			const appPrefix = config.rtmp.app.replace(/\/+$/, '') + '/';
+			if (config.rtmp.app && name.startsWith(appPrefix)) {
+				name = name.substring(appPrefix.length);
+			}
 			input.address = getLocalRTMP(name);
 		} else if (settings.push.type === 'srt') {
 			if (name === config.channelid) {

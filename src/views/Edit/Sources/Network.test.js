@@ -460,6 +460,18 @@ const pushmatrix = {
 	tests: [],
 };
 
+test('source:network discovered RTMP path does not duplicate the configured app', () => {
+	const settings = {
+		mode: 'push',
+		push: {
+			type: 'rtmp',
+			name: '/live/browser.stream',
+		},
+	};
+
+	expect(Network.func.createInputs(settings, $config, $skills_ffmpeg4)[0].address).toBe('{rtmp,name=browser.stream}');
+});
+
 pushmatrix.tests = [
 	{
 		name: 'RTMP',
