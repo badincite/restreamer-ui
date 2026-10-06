@@ -390,9 +390,10 @@ export default function RestreamerUI(props) {
 
 	const handleSelectChannel = (channelid) => {
 		restreamer.current.SelectChannel(channelid);
-		handleChannelList();
+		setChannelList(current => ({ ...current, open: false, channelid }));
 
-		document.location.hash = `#/${channelid}`;
+		const channel = restreamer.current.GetChannel(channelid);
+		document.location.hash = `#/${channelid}${channel?.available === false ? '/edit/wizard' : ''}`;
 	};
 
 	const handleCloseChannelList = () => {

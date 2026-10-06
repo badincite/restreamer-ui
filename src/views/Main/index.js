@@ -15,6 +15,7 @@ import { anonymize } from '../../utils/anonymizer';
 import useInterval from '../../hooks/useInterval';
 import ActionButton from '../../misc/ActionButton';
 import CopyButton from '../../misc/CopyButton';
+import BrowserControl from '../../misc/BrowserControl';
 import DebugModal from '../../misc/modals/Debug';
 import H from '../../utils/help';
 import Paper from '../../misc/Paper';
@@ -300,6 +301,7 @@ export default function Main(props) {
 				<Grid item xs={12} sm={12} md={8}>
 					<Paper marginBottom="0">
 						<PaperHeader title={title} onEdit={() => navigate(`/${_channelid}/edit`)} onHelp={handleHelp('main')} />
+						<BrowserControl restreamer={props.restreamer} channelid={_channelid} />
 						<Grid container spacing={1} className={classes.gridContainerL2}>
 							<Grid item xs={12}>
 								<Grid container spacing={0} className={classes.playerL1}>

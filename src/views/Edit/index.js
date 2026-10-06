@@ -17,6 +17,7 @@ import Tabs from '@mui/material/Tabs';
 import Typography from '@mui/material/Typography';
 
 import * as M from '../../utils/metadata';
+import BrowserControl from '../../misc/BrowserControl';
 import sourceThumb from '../../assets/images/livesource.png';
 import Dialog from '../../misc/modals/Dialog';
 import H from '../../utils/help';
@@ -413,6 +414,7 @@ export default function Edit(props) {
 					onHelp={handleHelp}
 				/>
 				<Grid container spacing={1}>
+					<Grid item xs={12}><BrowserControl restreamer={props.restreamer} channelid={_channelid} /></Grid>
 					<TabsVerticalGrid>
 						<Tabs orientation="vertical" variant="scrollable" value={$tab} onChange={handleChangeTab}>
 							<Tab className="tab" label={<Trans>General</Trans>} value="general" />

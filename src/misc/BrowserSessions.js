@@ -1,4 +1,5 @@
 import React from 'react';
+import BrowserControl from './BrowserControl';
 import { Alert, Box, Button, Checkbox, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Grid, LinearProgress, MenuItem, TextField, Typography } from '@mui/material';
 
 const initial = { name: 'Browser desktop', url: 'about:blank', resolution: '1920x1080', fps: 30, auto_match: true, channel_id: '' };
@@ -15,6 +16,7 @@ export default function BrowserSessions({ restreamer, channelid = '', initialSes
 	const [controlReady, setControlReady] = React.useState(false);
 	const [controlKey, setControlKey] = React.useState(0);
 	const [controlError, setControlError] = React.useState(false);
+	const [expandedControls, setExpandedControls] = React.useState(false);
 	const [max, setMax] = React.useState(0);
 	const callback = React.useRef(onSelect);
 	const selectedRef = React.useRef(selected);
@@ -85,6 +87,7 @@ export default function BrowserSessions({ restreamer, channelid = '', initialSes
 		let mounted = true;
 		setControlReady(false);
 		setControlError(false);
+		if (!session?.controls_ready) setExpandedControls(false);
 		if (!session?.controls_ready) return () => { mounted = false; };
 		const renew = async () => {
 			try {
@@ -202,6 +205,7 @@ export default function BrowserSessions({ restreamer, channelid = '', initialSes
 		{session?.controls_ready && <Grid item xs={12}>
 			<Alert severity="success">Browser ready. Use the embedded desktop below to navigate, log in and play video.</Alert>
 			<Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
+				<BrowserControl restreamer={restreamer} session={session} onOpenChange={setExpandedControls} />
 				<Button component="a" href={session.control_url} target="_blank" rel="noopener" variant="contained" disabled={!controlReady}>Open browser controls</Button>
 				<Button variant="outlined" onClick={retryControls}>Reconnect controls</Button>
 			</Box>
@@ -227,7 +231,7 @@ export default function BrowserSessions({ restreamer, channelid = '', initialSes
 			<DialogActions><Button disabled={busy} onClick={() => setDeleteOpen(false)}>Cancel</Button><Button color="error" disabled={busy} onClick={deleteSelected}>{busy ? 'Deleting...' : 'Delete'}</Button></DialogActions>
 		</Dialog>
 		{session && <Grid item xs={12}><Typography variant="caption">{session.resolution} · CPU decode · NVIDIA rendering / NVENC encoding. Container health is not proof of video playback. Next probes the RTMP feed.</Typography></Grid>}
-		{session?.controls_ready && controlReady && <Grid item xs={12}>
+		{session?.controls_ready && controlReady && !expandedControls && <Grid item xs={12}>
 			{controlError && <Alert severity="warning" action={<Button onClick={retryControls}>Retry</Button>}>Controls temporarily unavailable. Reconnect to reload the desktop.</Alert>}
 			<Box component="iframe" key={selected + ':' + controlKey} title="Browser desktop controls" src={session.control_url} onLoad={controlLoaded} allow="fullscreen" sx={{ width: '100%', height: 500, border: 0 }} />
 		</Grid>}

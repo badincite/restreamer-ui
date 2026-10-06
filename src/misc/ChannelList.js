@@ -146,7 +146,7 @@ function ChannelButton(props, largeChannelList) {
 	}
 
 	let color_active = theme.palette.primary.main;
-	switch (props.disabled) {
+	switch (props.selected) {
 		case true:
 			color_active = theme.palette.primary.light;
 			break;
@@ -157,7 +157,7 @@ function ChannelButton(props, largeChannelList) {
 
 	return (
 		<Grid item xs={12} sm={6} md={4} lg={3} style={{ paddingBottom: largeChannelList ? '10px' : 'auto' }}>
-			<ImageButton focusRipple disabled={props.disabled} onClick={props.onClick} style={{ width: props.width }}>
+			<ImageButton focusRipple disabled={props.disabled} aria-pressed={!!props.selected} onClick={props.onClick} style={{ width: props.width }}>
 				<Stack direction="column" spacing={0.5}>
 					<Image
 						style={{
@@ -264,7 +264,7 @@ export default function ChannelList(props) {
 						width={200}
 						title={channel.name}
 						state={states[channel.id]}
-						disabled={channelid === channel.channelid}
+						selected={channelid === channel.channelid}
 						onClick={() => {
 							onClick(channel.channelid);
 							if ($largeChannelList) {
