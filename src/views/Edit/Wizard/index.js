@@ -54,6 +54,7 @@ export default function Wizard(props) {
 	});
 	const [$ready, setReady] = React.useState(false);
 	const [$invalid, setInvalid] = React.useState(false);
+	const [$browserAvailable, setBrowserAvailable] = React.useState(false);
 
 	React.useEffect(() => {
 		(async () => {
@@ -80,6 +81,10 @@ export default function Wizard(props) {
 
 		const config = await props.restreamer.ConfigActive();
 		setConfig(config);
+		try {
+			await props.restreamer.BrowserRequest('/config');
+			setBrowserAvailable(true);
+		} catch (_) { /* The ordinary standalone bundle has no browser manager. */ }
 
 		setData({
 			...$data,
@@ -118,6 +123,7 @@ export default function Wizard(props) {
 		if (status === 'success') {
 			if (type === 'video') {
 				const profile = M.preselectProfile('video', res.streams, $profile, $skills.encoders);
+				if (source.settings.browser_session) profile.video.encoder.coder = 'copy';
 
 				setProfile({
 					...$profile,
@@ -249,14 +255,10 @@ export default function Wizard(props) {
 				if ($skills.protocols.input.includes('srt')) {
 					knownSources.push('srt');
 				}
-			} else if (s === 'video4linux2') {
-				knownSources.push('video4linux2');
-			} else if (s === 'raspicam') {
-				knownSources.push('raspicam');
-			} else if (s === 'avfoundation') {
-				knownSources.push('avfoundation');
 			}
 		}
+		// Hardware devices remain available in the full Advanced setup editor.
+		if ($browserAvailable) knownSources.push('browser');
 
 		let availableSources = [];
 
@@ -351,6 +353,8 @@ export default function Wizard(props) {
 				ready={$sources.video.ready}
 			>
 				<Component
+					restreamer={props.restreamer}
+					channelid={_channelid}
 					knownDevices={$skills.sources[s.type]}
 					config={$config.source[s.type]}
 					settings={$sources.video.settings}
@@ -857,8 +861,11 @@ export default function Wizard(props) {
 			setStep($abort.step);
 		};
 
-		handleNext = () => {
-			props.restreamer.DeleteChannel(_channelid);
+		handleNext = async () => {
+			if (!(await props.restreamer.DeleteChannel(_channelid))) {
+				notify.Dispatch('warning', 'delete:browser', 'Channel/browser cleanup failed. Please retry.');
+				return;
+			}
 
 			// Select a channel to jump back to
 			const channels = props.restreamer.ListChannels();

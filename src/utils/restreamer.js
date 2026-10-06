@@ -173,6 +173,27 @@ class Restreamer {
 
 	// API calls
 
+	async BrowserRequest(path, method = 'GET', body = undefined, retry = true) {
+		const token = typeof this.api.token === 'function' ? await this.api.token() : this.api.token;
+		const response = await fetch('/browser-api' + path, {
+			method,
+			credentials: 'same-origin',
+			headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+			body: body === undefined ? undefined : JSON.stringify(body),
+		});
+		if (response.status === 401 && retry && (await this.RefreshToken())) {
+			return this.BrowserRequest(path, method, body, false);
+		}
+		const data = await response.json().catch(() => ({}));
+		if (!response.ok) {
+			const error = new Error(typeof data.message === 'string' ? data.message : 'Browser manager unavailable');
+			error.status = response.status;
+			throw error;
+		}
+		if (path === '/config') this.browserManagerAvailable = true;
+		return data;
+	}
+
 	async _call(fn, ...args) {
 		const res = await fn.apply(this.api, args);
 		if (res.err !== null && !this.ignoreAPIErrors) {
@@ -1240,6 +1261,21 @@ class Restreamer {
 	async DeleteChannel(channelid) {
 		const channel = this.GetChannel(channelid);
 		if (!channel) {
+			return false;
+		}
+
+		// Complete browser cleanup before removing the channel. If cleanup
+		// fails, retain the channel so deletion can be retried safely.
+		try {
+			if (!this.browserManagerAvailable) {
+				try { await this.BrowserRequest('/config'); }
+				catch (e) { if (e.status !== 404) throw e; }
+			}
+			if (this.browserManagerAvailable) {
+				await this.BrowserRequest(`/channels/${channelid}/sessions`, 'DELETE');
+			}
+		} catch (e) {
+			this._dispatchEvent('error', 'browser', 'Browser cleanup failed; the channel was not deleted. ' + e.message);
 			return false;
 		}
 

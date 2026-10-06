@@ -16,10 +16,7 @@ export default function Source(props) {
 			<Grid container spacing={2}>
 				<Grid item xs={12}>
 					<Typography>
-						<Trans>
-							Select whether you pull the stream from a <strong>network source</strong> (such as a network camera) or the{' '}
-							<strong>internal RTMP server</strong> (e.g., OBS streams to the Restreamer).
-						</Trans>
+						Select a network stream, an internal streaming server, or a GPU-backed browser desktop. Hardware devices are available in Advanced setup.
 					</Typography>
 				</Grid>
 				<Grid item xs={12}>

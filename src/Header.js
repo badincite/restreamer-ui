@@ -275,6 +275,7 @@ function HeaderMenu(props) {
 							<Trans>System</Trans>
 						</MenuItem>
 					)}
+					<MenuItem component="a" href="#/browsers"><ListItemIcon><WebIcon fontSize="small" /></ListItemIcon>Browser desktops</MenuItem>
 					<Divider />
 					<MenuItem onClick={() => setAbout(true)}>
 						<ListItemIcon>

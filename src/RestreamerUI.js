@@ -269,6 +269,7 @@ export default function RestreamerUI(props) {
 	};
 
 	const handleLogout = async () => {
+		try { await restreamer.current.BrowserRequest('/control-session', 'DELETE'); } catch (_) { /* Optional browser manager. */ }
 		setState({
 			...$state,
 			initialized: false,

@@ -2,6 +2,7 @@ import React from 'react';
 import { Route, Navigate, Routes, HashRouter as DOMRouter } from 'react-router-dom';
 
 import Views from './views';
+import Browsers from './views/Browsers';
 
 export default function Router(props) {
 	if (props.restreamer === null) {
@@ -15,6 +16,7 @@ export default function Router(props) {
 			<Routes>
 				<Route path="/" element={<Views.ChannelSelect channelid={channelid} />} />
 				<Route path="/playersite" element={<Views.Playersite restreamer={props.restreamer} />} />
+				<Route path="/browsers" element={<Browsers restreamer={props.restreamer} />} />
 				<Route path="/settings" element={<Views.Settings restreamer={props.restreamer} />} />
 				<Route path="/settings/:tab" element={<Views.Settings restreamer={props.restreamer} />} />
 				<Route path="/:channelid" element={<Views.Main key={channelid} restreamer={props.restreamer} />} />

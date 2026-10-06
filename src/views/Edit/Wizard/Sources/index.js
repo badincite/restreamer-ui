@@ -4,6 +4,7 @@ import * as InternalSRT from './InternalSRT';
 import * as Network from './Network';
 import * as Raspicam from './Raspicam';
 import * as V4L from './V4L';
+import * as BrowserDesktop from './BrowserDesktop';
 
 class Registry {
 	constructor() {
@@ -37,6 +38,7 @@ const registry = new Registry();
 registry.Register(Network);
 registry.Register(InternalRTMP);
 registry.Register(InternalSRT);
+registry.Register(BrowserDesktop);
 //registry.Register(InternalHLS);
 registry.Register(AVFoundation);
 registry.Register(Raspicam);
