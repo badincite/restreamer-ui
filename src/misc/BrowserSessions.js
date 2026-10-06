@@ -24,6 +24,7 @@ export default function BrowserSessions({ restreamer, channelid = '', initialSes
 	callback.current = onSelect;
 	const session = sessions.find((s) => s.id === selected);
 	const active = sessions.filter((s) => s.running || ['running', 'restarting', 'paused'].includes(s.status));
+	const otherActive = active.filter((s) => s.channel_id !== channelid);
 	const capacityBlocked = max > 0 && !!session && !session.running && active.length >= max;
 	const channelName = (s) => {
 		const channel = restreamer.ListChannels().find((c) => c.channelid === s.channel_id);
@@ -36,7 +37,10 @@ export default function BrowserSessions({ restreamer, channelid = '', initialSes
 		const refresh = async () => {
 			try {
 				const list = await restreamer.BrowserRequest('/sessions');
-				if (mounted) setSessions(list);
+				if (mounted) {
+					restreamer.RestoreBrowserChannels(list);
+					setSessions(list);
+				}
 			} catch (e) { if (mounted) setError(e.message); }
 		};
 		(async () => {
@@ -49,7 +53,9 @@ export default function BrowserSessions({ restreamer, channelid = '', initialSes
 					setMax(config.max_workers);
 				}
 				if (channelid) {
-					const saved = await restreamer.BrowserRequest(`/channels/${channelid}/session`, 'POST', {});
+					const saved = await restreamer.BrowserRequest(`/channels/${channelid}/session`, 'POST', {
+						name: restreamer.GetChannel(channelid)?.name || 'Browser desktop',
+					});
 					if (mounted) setSelected(saved.id);
 				}
 				await refresh();
@@ -70,10 +76,10 @@ export default function BrowserSessions({ restreamer, channelid = '', initialSes
 	}, [session, selected]);
 
 	React.useEffect(() => {
-		callback.current?.(session || null);
+		callback.current?.(session && (!channelid || session.channel_id === channelid) ? session : null);
 		// Notify only when source/readiness changes, not on every parent render.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [selected, session?.running, session?.health, session?.controls_ready, session?.input_url]);
+	}, [selected, channelid, session?.channel_id, session?.running, session?.health, session?.controls_ready, session?.input_url]);
 
 	React.useEffect(() => {
 		let mounted = true;
@@ -155,14 +161,31 @@ export default function BrowserSessions({ restreamer, channelid = '', initialSes
 	const status = (s) => !s.running ? 'Stopped' : s.controls_ready ? 'Ready - controls available' : s.health === 'unhealthy' ? 'Not ready - health check failing' : 'Starting - preparing browser controls';
 	return <Grid container spacing={2}>
 		{channelid && <Grid item xs={12}><Button component="a" href="/ui/#/browsers" variant="outlined">Manage all browser sessions</Button></Grid>}
-		<Grid item xs={12}><Typography>{sessions.length} saved browser sessions. {max > 0 ? `${active.length} active / ${max} allowed at once.` : `${active.length} active. No application session cap; GPU/driver and host capacity still apply.`}</Typography>
+		<Grid item xs={12}>
+			{channelid && <Typography role="status">This channel's browser: {session ? status(session) : 'Loading...'}</Typography>}
+			<Typography>{channelid ? 'Across all channels: ' : ''}{sessions.length} saved browser sessions. {max > 0 ? `${active.length} active / ${max} allowed at once.` : `${active.length} active. No application session cap; GPU/driver and host capacity still apply.`}</Typography>
 			<Typography variant="body2">Stopped sessions do not use an active slot. Stop retains a session for reuse; deleting its channel removes the browser container and session. New browsers are created from channel Video setup.</Typography>
 		</Grid>
 		{error && <Grid item xs={12}><Alert severity="error">{error}</Alert></Grid>}
-		<Grid item xs={12}><TextField select fullWidth label="Browser session" value={selected} onChange={(e) => choose(e.target.value)}>
+		{channelid && otherActive.length > 0 && <Grid item xs={12}><Alert severity="info">
+			Other channels have running browsers. Continue their setup below, or start this channel's own browser.
+			{otherActive.map((s) => {
+				const owner = restreamer.GetChannel(s.channel_id);
+				return <Box key={s.id} sx={{ mt: 1 }}><Typography>{channelName(s)}: {status(s)}</Typography>
+					{owner && <Button component="a" href={`/ui/#/${s.channel_id}${owner.available ? '' : '/edit/wizard'}`} variant="outlined" size="small">
+						{owner.available ? 'Open channel' : 'Continue channel setup'}
+					</Button>}
+				</Box>;
+			})}
+		</Alert></Grid>}
+		<Grid item xs={12}><TextField select fullWidth label={channelid ? "This channel's browser" : 'Browser session'} value={selected} onChange={(e) => choose(e.target.value)}>
 			{!channelid && <MenuItem value="">Select a browser channel</MenuItem>}
 			{sessions.filter((s) => !channelid || s.channel_id === channelid).map((s) => <MenuItem key={s.id} value={s.id}>{s.name} — {channelName(s)} ({s.id.slice(0, 6)}) — {status(s)}</MenuItem>)}
 		</TextField></Grid>
+		{!channelid && associatedChannel && !associatedChannel.available && <Grid item xs={12}><Alert severity="info">
+			This browser belongs to an unfinished channel. Continue setup to connect its feed to Restreamer.
+			<Box sx={{ mt: 1 }}><Button component="a" href={`/ui/#/${session.channel_id}/edit/wizard`} variant="contained">Continue channel setup</Button></Box>
+		</Alert></Grid>}
 		{(capacityBlocked || capacityError) && <Grid item xs={12}><Alert severity="warning">
 			<Typography role="status">{capacityError || `Not started: ${active.length}/${max} browser slots are already in use.`}</Typography>
 			Stop one of the active browsers below, or delete its channel, then start this browser. Nothing will be stopped automatically.

@@ -1217,6 +1217,12 @@ class Restreamer {
 
 		this.channels = channels;
 
+		// Browser sessions outlive a page reload, including unfinished wizards.
+		// Recover their original channel IDs before creating a new blank channel.
+		try {
+			this.RestoreBrowserChannels(await this.BrowserRequest('/sessions'));
+		} catch (_) { /* Standalone Restreamer has no browser manager. */ }
+
 		if (this.channels.size === 0) {
 			this.CreateChannel('Livestream');
 		}
@@ -1242,6 +1248,17 @@ class Restreamer {
 			const metadata = await this.GetIngestMetadata(channelid);
 			delete metadata.imported;
 			await this.SetIngestMetadata(channelid, metadata);
+		}
+	}
+
+	RestoreBrowserChannels(sessions) {
+		for (const session of sessions) {
+			const channelid = session.channel_id;
+			if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(channelid) || this.channels.has(channelid)) continue;
+			this.channels.set(channelid, {
+				id: `restreamer-ui:ingest:${channelid}`, channelid,
+				name: session.name || 'Browser desktop', egresses: new Map(), available: false,
+			});
 		}
 	}
 
