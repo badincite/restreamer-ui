@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '../utils/testing';
 import BrowserControl from './BrowserControl';
 
 test('full window controls authenticate, show a close header and close without stopping the browser', async () => {
@@ -11,6 +11,11 @@ test('full window controls authenticate, show a close header and close without s
   const frame = await screen.findByTitle('Full screen browser desktop');
   expect(frame.getAttribute('src')).toBe(session.control_url);
   expect(screen.getByRole('dialog').querySelector('.MuiToolbar-root')).toBeTruthy();
+  const overlay = screen.getByRole('dialog').closest('.MuiDialog-root');
+  expect(getComputedStyle(overlay).maxWidth).toBe('none');
+  expect(getComputedStyle(overlay).width).toBe('100vw');
+  expect(getComputedStyle(overlay).maxHeight).toBe('none');
+  expect(getComputedStyle(overlay).padding).toBe('0px');
   expect(restreamer.BrowserRequest).toHaveBeenCalledWith('/control-session', 'POST', {});
   fireEvent.click(screen.getByRole('button', {name: 'Close browser controls'}));
   await waitFor(() => expect(screen.queryByTitle('Full screen browser desktop')).toBeNull());

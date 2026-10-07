@@ -56,7 +56,11 @@ export default function BrowserControl({ restreamer, channelid = '', session: su
       Open browser full screen
     </Button>
     <Dialog fullScreen open={open} onClose={() => changeOpen(false)} aria-label="Full screen browser controls"
-      PaperProps={{ sx: { display: 'flex', flexDirection: 'column', overflow: 'hidden', bgcolor: '#111' } }}>
+      sx={{ position: 'fixed', inset: 0, m: 0, p: 0, width: '100vw', height: '100dvh',
+        maxWidth: 'none', maxHeight: 'none', overflow: 'hidden', boxSizing: 'border-box',
+        '& .MuiDialog-container': { width: '100%', height: '100%' } }}
+      PaperProps={{ sx: { m: 0, p: 0, width: '100%', height: '100%', maxWidth: 'none', maxHeight: 'none',
+        borderRadius: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', bgcolor: '#111' } }}>
       <Toolbar sx={{ flexShrink: 0, gap: 1, bgcolor: 'background.paper', flexWrap: 'wrap' }}>
         <Typography sx={{ flex: 1 }}>Browser controls — {session?.name || 'Browser desktop'}</Typography>
         <Button onClick={() => setReload(n => n + 1)}>Reconnect</Button>
