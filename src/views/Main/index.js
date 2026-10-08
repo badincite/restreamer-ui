@@ -281,12 +281,12 @@ export default function Main(props) {
 		);
 	}
 
-	if ($state.valid === false) {
+	const channel = props.restreamer.GetChannel(_channelid);
+	if (!channel?.available) {
 		return <Welcome />;
 	}
 
 	const storage = $metadata.control.hls.storage;
-	const channel = props.restreamer.GetChannel(_channelid);
 	const manifest = props.restreamer.GetChannelAddress('hls+' + storage, _channelid);
 	const poster = props.restreamer.GetChannelAddress('snapshot+' + storage, _channelid);
 

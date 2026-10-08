@@ -4,6 +4,7 @@ import { Trans } from '@lingui/macro';
 import CircularProgress from '@mui/material/CircularProgress';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
 
 import Paper from '../../../misc/Paper';
 import PaperHeader from '../../../misc/PaperHeader';
@@ -14,12 +15,13 @@ export default function Probe(props) {
 			<PaperHeader spacing={2} variant="h1" onAbort={props.onAbort} />
 			<Grid container justifyContent="center" spacing={2} align="center">
 				<Grid item xs={12}>
-					<CircularProgress color="inherit" />
+					{!props.error && <CircularProgress color="inherit" />}
 				</Grid>
 				<Grid item xs={12}>
 					<Typography textAlign="center">
-						<Trans>Please wait. Probe stream data ...</Trans>
+						{props.message || <Trans>Please wait. Probe stream data ...</Trans>}
 					</Typography>
+					{props.error && <><Typography color="error">{props.error}</Typography><Button onClick={props.onRetry}>Retry</Button><Button onClick={props.onBack}>Back to settings</Button></>}
 				</Grid>
 			</Grid>
 		</Paper>

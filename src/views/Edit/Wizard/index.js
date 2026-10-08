@@ -55,6 +55,25 @@ export default function Wizard(props) {
 	const [$ready, setReady] = React.useState(false);
 	const [$invalid, setInvalid] = React.useState(false);
 	const [$browserAvailable, setBrowserAvailable] = React.useState(false);
+	const browserPrepare = React.useRef(null);
+	const browserBusy = React.useRef(false);
+	const [browserStartup, setBrowserStartup] = React.useState({ message: '', error: '' });
+	const startBrowser = async () => {
+		if (browserBusy.current) return;
+		browserBusy.current = true;
+		setStep('BROWSER START');
+		setBrowserStartup({ message: 'Preparing this channel’s browser…', error: '' });
+		try {
+			const source = await browserPrepare.current((message) => setBrowserStartup({ message, error: '' }));
+			setBrowserStartup({ message: 'Browser ready. Checking its RTMP feed…', error: '' });
+			for (let attempt = 0; attempt < 3; attempt++) {
+				if (await probe('video', source)) { setStep('VIDEO RESULT'); return; }
+				await new Promise((resolve) => setTimeout(resolve, 2000));
+			}
+			throw new Error('The desktop is ready, but its stream is not available yet. Retry the feed check or open Browser desktops.');
+		} catch (e) { setBrowserStartup({ message: 'Browser setup needs attention', error: e.message }); }
+		finally { browserBusy.current = false; }
+	};
 
 	React.useEffect(() => {
 		(async () => {
@@ -285,6 +304,7 @@ export default function Wizard(props) {
 		return <Source onAbort={handleAbort} onHelp={handleHelp('video-setup')} onAdvanced={handleAdvanced} sources={availableSources} />;
 	} else if ($step === 'VIDEO SETTINGS') {
 		handleNext = async () => {
+			if ($sourceid === 'browser') { await startBrowser(); return; }
 			// probing ...
 			setStep('VIDEO PROBE');
 
@@ -360,6 +380,7 @@ export default function Wizard(props) {
 					settings={$sources.video.settings}
 					skills={$skills}
 					onChange={handleChange}
+					onPrepare={(prepare) => { browserPrepare.current = prepare; }}
 					onRefresh={handleRefresh}
 				/>
 				<Backdrop open={$skillsRefresh}>
@@ -369,7 +390,10 @@ export default function Wizard(props) {
 		);
 	}
 	// STEP 3 - Source Probe
-	else if ($step === 'VIDEO PROBE') {
+	else if ($step === 'BROWSER START') {
+		return <Probe message={browserStartup.message} error={browserStartup.error} onRetry={startBrowser}
+			onBack={() => setStep('VIDEO SETTINGS')} />;
+	} else if ($step === 'VIDEO PROBE') {
 		return <Probe onAbort={handleAbort} />;
 	} else if ($step === 'VIDEO RESULT') {
 		handleNext = () => {

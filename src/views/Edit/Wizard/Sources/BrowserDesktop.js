@@ -1,18 +1,18 @@
 import React from 'react';
 import Grid from '@mui/material/Grid';
 import Icon from '@mui/icons-material/DesktopWindows';
-import BrowserSessions from '../../../../misc/BrowserSessions';
+import BrowserSetup from '../../../../misc/BrowserSetup';
 import * as S from '../../Sources/Network';
 
 function Source(props) {
-	const handleSelect = (session) => {
+	const source = (session) => {
 		const config = S.func.initConfig(props.config);
 		const settings = S.func.initSettings({ mode: 'pull', address: session?.input_url || '', browser_session: session?.id || '' }, config);
-		props.onChange(S.id, settings, session ? S.func.createInputs(settings, config, S.func.initSkills(props.skills)) : [],
-			!!session?.controls_ready && session?.health === 'healthy');
+		return { type: S.id, settings, inputs: session ? S.func.createInputs(settings, config, S.func.initSkills(props.skills)) : [], ready: true };
 	};
-	return <Grid item xs={12}><BrowserSessions restreamer={props.restreamer} channelid={props.channelid}
-		initialSession={props.settings?.browser_session} onSelect={handleSelect} /></Grid>;
+	return <Grid item xs={12}><BrowserSetup restreamer={props.restreamer} channelid={props.channelid}
+		onSettings={(valid) => { const s = source(null); props.onChange(s.type, s.settings, s.inputs, valid); }}
+		onPrepare={(prepare) => props.onPrepare(async (progress) => source(await prepare(progress)))} /></Grid>;
 }
 const id = 'browser';
 const type = 'network';
