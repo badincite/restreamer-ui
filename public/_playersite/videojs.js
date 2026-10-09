@@ -9,24 +9,17 @@ var config = {
 	// Needed to append the url origin in order for the source to properly pass to the cast device. Also provide a default reciever application ID
 	sources: [{ src: window.location.origin + '/' + playerConfig.source, type: 'application/x-mpegURL' }],
 	plugins: {
-		license: playerConfig.license,
-		chromecast: {
-			receiverApplicationId: 'CC1AD845'
-		},
 	},
 };
 
 if (chromecast) {
 	config.techOrder = ['chromecast', 'html5'];
+	config.plugins.chromecast = { receiverApplicationId: 'CC1AD845' };
 }
 
 var player = videojs('player', config);
 
 player.ready(function () {
-
-	if (chromecast) {
-		player.chromecast();
-	}
 
 	if (airplay) {
 		player.airPlay();
@@ -38,9 +31,9 @@ player.ready(function () {
 		var overlay = null;
 
 		var imgTag = new Image();
-		imgTag.onLoad = function () {
+		imgTag.onload = function () {
 			imgTag.setAttribute('width', this.width);
-			imgTag.setAttribute('height'.this.height);
+			imgTag.setAttribute('height', this.height);
 		};
 		imgTag.src = playerConfig.logo.image + '?' + Math.random();
 
